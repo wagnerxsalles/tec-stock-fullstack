@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Papel {
+  ADMIN
+  TECNICO
+}
+
+enum TipoEquipamento {
+  ONU
+  ROTEADOR
+}
+
+enum StatusEquipamento {
+  EM_ESTOQUE
+  INSTALADO
+  COM_DEFEITO
+}
+
+enum TipoServico {
+  INSTALACAO
+  ALTERACAO_ENDERECO
+  TROCA_ROTEADOR
+  TROCA_ONU
+}
+
+enum AcaoMovimentacao {
+  INSTALADO
+  REMOVIDO
+}
+
+model Tecnico {
+  id           String        @id @default(uuid())
+  nome         String
+  sobrenome    String
+  cpf          String        @unique
+  email        String        @unique
+  senha        String
+  papel        Papel         @default(TECNICO)
+  createdAt    DateTime      @default(now())
+  equipamentos Equipamento[]
+  atendimentos Atendimento[]
+}
+
+model Cliente {
+  id           String        @id @default(uuid())
+  codigo       String        @unique
+  nome         String?
+  createdAt    DateTime      @default(now())
+  atendimentos Atendimento[]
+}
+
+model Equipamento {
+  id              String                    @id @default(uuid())
+  tipo            TipoEquipamento
+  identificador   String
+  status          StatusEquipamento         @default(EM_ESTOQUE)
+  dataRecebimento DateTime                  @default(now())
+  tecnicoId       String
+  tecnico         Tecnico                   @relation(fields: [tecnicoId], references: [id])
+  movimentacoes   MovimentacaoEquipamento[]
+  createdAt       DateTime                  @default(now())
+
+  @@index([identificador])
+}
+
+model Atendimento {
+  id            String                    @id @default(uuid())
+  clienteId     String
+  cliente       Cliente                   @relation(fields: [clienteId], references: [id])
+  tecnicoId     String
+  tecnico       Tecnico                   @relation(fields: [tecnicoId], references: [id])
+  tipoServico   TipoServico
+  observacao    String?
+  data          DateTime                  @default(now())
+  movimentacoes MovimentacaoEquipamento[]
+}
+
+model MovimentacaoEquipamento {
+  id            String           @id @default(uuid())
+  atendimentoId String
+  atendimento   Atendimento      @relation(fields: [atendimentoId], references: [id])
+  equipamentoId String
+  equipamento   Equipamento      @relation(fields: [equipamentoId], references: [id])
+  acao          AcaoMovimentacao
+  data          DateTime         @default(now())
+}
