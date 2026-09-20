@@ -4,6 +4,9 @@
 .agents/
 skills-lock.json
 
+# Cache de build do TypeScript
+*.tsbuildinfo
+
 # compiled output
 /dist
 /node_modules
