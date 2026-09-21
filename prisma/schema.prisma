@@ -83,11 +83,12 @@ model Atendimento {
 }
 
 model MovimentacaoEquipamento {
-  id            String           @id @default(uuid())
-  atendimentoId String
-  atendimento   Atendimento      @relation(fields: [atendimentoId], references: [id])
-  equipamentoId String
-  equipamento   Equipamento      @relation(fields: [equipamentoId], references: [id])
-  acao          AcaoMovimentacao
-  data          DateTime         @default(now())
+  id              String            @id @default(uuid())
+  atendimentoId   String
+  atendimento     Atendimento       @relation(fields: [atendimentoId], references: [id])
+  equipamentoId   String
+  equipamento     Equipamento       @relation(fields: [equipamentoId], references: [id])
+  acao            AcaoMovimentacao
+  statusNoMomento StatusEquipamento
+  data            DateTime          @default(now())
 }
