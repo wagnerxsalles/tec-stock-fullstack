@@ -1,10 +1,12 @@
 // src/tecnicos/tecnicos.controller.ts
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { TecnicosService } from './tecnicos.service.js';
 import { CreateTecnicoDto } from './dto/create-tecnico.dto.js';
 import { UpdateTecnicoDto } from './dto/update-tecnico.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 
 @Controller('tecnicos')
+@UseGuards(JwtAuthGuard)
 export class TecnicosController {
   constructor(private readonly tecnicosService: TecnicosService) {}
 
