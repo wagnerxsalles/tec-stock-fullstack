@@ -37,4 +37,21 @@ export class EquipamentosService {
       where: { id },
     });
   }
+
+      async findAlertasEstoqueParado() {
+    const equipamentosEmEstoque = await this.prisma.equipamento.findMany({
+      where: { status: 'EM_ESTOQUE' },
+    });
+
+    const agora = new Date();
+
+    return equipamentosEmEstoque
+      .map((equipamento) => {
+        const diasEmEstoque = Math.floor(
+          (agora.getTime() - equipamento.dataRecebimento.getTime()) / (24 * 60 * 60 * 1000),
+        );
+        return { ...equipamento, diasEmEstoque };
+      })
+      .filter((equipamento) => equipamento.diasEmEstoque >= 30);
+  }
 }
