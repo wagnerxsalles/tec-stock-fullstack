@@ -24,6 +24,11 @@ export class EquipamentosController {
     return this.equipamentosService.findByIdentificador(identificador);
   }
 
+    @Get('alertas')
+  findAlertasEstoqueParado() {
+    return this.equipamentosService.findAlertasEstoqueParado();
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEquipamentoDto: UpdateEquipamentoDto) {
     return this.equipamentosService.update(id, updateEquipamentoDto);
