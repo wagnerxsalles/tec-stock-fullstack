@@ -54,6 +54,7 @@ model Cliente {
   nome         String?
   createdAt    DateTime      @default(now())
   atendimentos Atendimento[]
+  equipamentos Equipamento[]
 }
 
 model Equipamento {
@@ -64,9 +65,12 @@ model Equipamento {
   dataRecebimento DateTime                  @default(now())
   tecnicoId       String
   tecnico         Tecnico                   @relation(fields: [tecnicoId], references: [id])
+  clienteAtualId  String?
+  clienteAtual    Cliente?                  @relation(fields: [clienteAtualId], references: [id])
   movimentacoes   MovimentacaoEquipamento[]
   createdAt       DateTime                  @default(now())
 
+  @@unique([clienteAtualId, tipo])
   @@index([identificador])
 }
 
