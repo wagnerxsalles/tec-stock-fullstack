@@ -105,7 +105,7 @@ export class AtendimentosService {
           movimentacoes: { orderBy: { data: 'asc' }, include: { equipamento: true } },
         },
       });
-    });
+    }, { timeout: 15000 });
   }
 
   findAll() {
