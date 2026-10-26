@@ -1,7 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { StatusEquipamento } from '../generated/prisma/enums.js';
+import { StatusEquipamento, TipoEquipamento, TipoServico } from '../generated/prisma/enums.js';
 import { CreateAtendimentoDto } from './dto/create-atendimento.dto.js';
+
+const EQUIPAMENTOS_EXIGIDOS: Record<TipoServico, TipoEquipamento[]> = {
+  INSTALACAO: ['ONU', 'ROTEADOR'],
+  ALTERACAO_ENDERECO: ['ONU', 'ROTEADOR'],
+  TROCA_ROTEADOR: ['ROTEADOR'],
+  TROCA_ONU: ['ONU'],
+};
+
+const ROTULO: Record<TipoEquipamento, string> = {
+  ONU: 'ONU',
+  ROTEADOR: 'roteador',
+};
 
 function validarDestino(status: StatusEquipamento | undefined): StatusEquipamento {
   if (status !== 'EM_ESTOQUE' && status !== 'COM_DEFEITO') {
@@ -18,12 +30,44 @@ export class AtendimentosService {
 
   async create(createAtendimentoDto: CreateAtendimentoDto) {
     const { movimentacoes, ...dadosAtendimento } = createAtendimentoDto;
-    const { clienteId } = dadosAtendimento;
+    const { clienteId, tipoServico } = dadosAtendimento;
 
     return this.prisma.$transaction(async (tx) => {
+      // 1) descobrir o tipo (ONU ou roteador) de cada equipamento do pedido
+      const idsDoPedido = movimentacoes.map((mov) => mov.equipamentoId);
+      const equipamentosDoPedido = await tx.equipamento.findMany({
+        where: { id: { in: idsDoPedido } },
+      });
+      const tipoPorId = new Map<string, TipoEquipamento>(
+        equipamentosDoPedido.map((eq): [string, TipoEquipamento] => [eq.id, eq.tipo]),
+      );
+
+      for (const mov of movimentacoes) {
+        if (!tipoPorId.has(mov.equipamentoId)) {
+          throw new BadRequestException('Equipamento não encontrado');
+        }
+      }
+
+      // 2) conferir o checklist do tipo de serviço, antes de gravar qualquer coisa
+      const tiposInstalados = new Set(
+        movimentacoes
+          .filter((mov) => mov.acao === 'INSTALADO')
+          .map((mov) => tipoPorId.get(mov.equipamentoId)),
+      );
+      const faltando = EQUIPAMENTOS_EXIGIDOS[tipoServico].filter(
+        (tipo) => !tiposInstalados.has(tipo),
+      );
+
+      if (faltando.length > 0) {
+        throw new BadRequestException(
+          `Este tipo de serviço exige instalar: ${faltando.map((tipo) => ROTULO[tipo]).join(' e ')}`,
+        );
+      }
+
+      // 3) agora sim, grava
       const atendimento = await tx.atendimento.create({ data: dadosAtendimento });
 
-      for (const mov of movimentacoes ?? []) {
+      for (const mov of movimentacoes) {
         const equipamento = await tx.equipamento.findUnique({
           where: { id: mov.equipamentoId },
         });
