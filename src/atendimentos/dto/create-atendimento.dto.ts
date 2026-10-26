@@ -1,5 +1,12 @@
-// src/atendimentos/dto/create-atendimento.dto.ts
-import { IsEnum, IsString, IsNotEmpty, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsEnum,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  ArrayMinSize,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { TipoServico } from '../../generated/prisma/enums.js';
 import { CreateMovimentacaoDto } from './create-movimentacao.dto.js';
@@ -20,9 +27,11 @@ export class CreateAtendimentoDto {
   @IsString()
   observacao?: string;
 
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, {
+    message: 'Todo atendimento precisa ter pelo menos uma movimentação de equipamento',
+  })
   @ValidateNested({ each: true })
   @Type(() => CreateMovimentacaoDto)
-  movimentacoes?: CreateMovimentacaoDto[];
+  movimentacoes: CreateMovimentacaoDto[];
 }
