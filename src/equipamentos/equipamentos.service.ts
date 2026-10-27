@@ -13,8 +13,14 @@ export class EquipamentosService {
     });
   }
 
-  findAll() {
-    return this.prisma.equipamento.findMany();
+    findAll() {
+    return this.prisma.equipamento.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        clienteAtual: { select: { codigo: true, nome: true } },
+        tecnico: { select: { nome: true, sobrenome: true } },
+      },
+    });
   }
 
   findByIdentificador(identificador: string) {
@@ -22,6 +28,9 @@ export class EquipamentosService {
       where: { identificador },
       orderBy: { createdAt: 'desc' },
       take: 10,
+      include: {
+        clienteAtual: { select: { codigo: true, nome: true } },
+      },
     });
   }
 
