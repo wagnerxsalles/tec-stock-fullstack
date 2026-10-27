@@ -154,20 +154,24 @@ export class AtendimentosService {
 
   findAll() {
     return this.prisma.atendimento.findMany({
+      orderBy: { data: 'desc' },
       include: {
+        cliente: { select: { codigo: true, nome: true } },
+        tecnico: { select: { nome: true, sobrenome: true } },
         movimentacoes: { orderBy: { data: 'asc' }, include: { equipamento: true } },
       },
     });
   }
 
-  findByClienteCodigo(codigo: string) {
+   findByClienteCodigo(codigo: string) {
     return this.prisma.atendimento.findMany({
       where: { cliente: { codigo } },
+      orderBy: { data: 'desc' },
       include: {
         cliente: true,
+        tecnico: { select: { nome: true, sobrenome: true } },
         movimentacoes: { orderBy: { data: 'asc' }, include: { equipamento: true } },
       },
-      orderBy: { data: 'desc' },
     });
   }
 }
